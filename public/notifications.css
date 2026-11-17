@@ -1,0 +1,16 @@
+/* Pak-Tel theme for the official no-font Dynaura stylesheet. */
+.dynaura-root {
+  --dynaura-font: "DM Sans", system-ui, sans-serif;
+  --dynaura-bg: #071322;
+  --dynaura-fg: #f5f6f1;
+  --dynaura-muted: #b7c5c7;
+  --dynaura-ring: rgba(200, 255, 67, .26);
+  --dynaura-btn: rgba(245, 246, 241, .12);
+  --dynaura-success: #c8ff43;
+  --dynaura-info: #6de3c1;
+  --dynaura-warning: #ffd477;
+  --dynaura-error: #ff8782;
+  --dynaura-loading: #6de3c1;
+}
+/* A preview snapshot is for browsing, not a price quote. */
+.plan-button:disabled, .plan-cta:disabled { opacity: .58; cursor: not-allowed; }

@@ -1,0 +1,10 @@
+# Local development only. Copy to .dev.vars (git-ignored) and fill in.
+# In production set these with:  wrangler secret put <NAME>
+# NEVER commit real values.
+YESIM_API_TOKEN=
+DPAY_API_KEY=
+DPAY_WEBHOOK_SECRET=
+# DPAY_API_KEY: secret bearer key (dpay_test_sk_… / dpay_live_sk_…), server side only.
+# DPAY_WEBHOOK_SECRET: shown once when the webhook endpoint is registered (npm run dpay:webhook).
+# DPAY_API_BASE_URL: set in wrangler.toml → https://api.dpay.com.pk/v1
+BREVO_API_KEY=

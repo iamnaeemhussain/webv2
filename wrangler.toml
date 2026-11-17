@@ -1,0 +1,26 @@
+name = "pak-tel"
+main = "src/worker.js"
+compatibility_date = "2025-09-01"
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+[[d1_databases]]
+binding = "DB"
+database_name = "my-pak-tel"
+migrations_dir = "migrations"
+[triggers]
+crons = ["* * * * *"]
+[vars]
+PLANS_SHEET_ID = "1mCEh8PIE1Ke5UnEBzWqBFnkcCdvRAkXtTEoYGNGRDvE"
+YESIM_API_BASE = "https://partners-api.yesim.biz"
+DPAY_API_BASE_URL = "https://api.dpay.com.pk/v1"
+# Checkout is enabled only when the canonical HTTPS origin, verified Brevo sender,
+# DPay/Yesim/Brevo runtime secrets, D1, webhook and cron are configured.
+PUBLIC_BASE_URL = "https://pak-tel.com"
+BREVO_SENDER_EMAIL = ""
+ENABLE_NEW_ESIM_SALES = "true"
+# Outbound Yesim URLs contain a secret. Do not enable request/trace logging unless
+# token query parameters are guaranteed to be redacted by the platform.
+[observability]
+enabled = false

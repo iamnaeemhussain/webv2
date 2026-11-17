@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#081323" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="my Pak-Tel — check your eSIM balance, expiry and status, and Top-up instantly." />
+    <link rel="icon" href="/manage/favicon.svg" type="image/svg+xml" />
+    <title>my Pak-Tel — eSIM self-service</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <!-- Bump ?v= on styles.css, qrcode.js and app.js whenever those files change, so browsers never run a stale copy. -->
+    <link rel="stylesheet" href="/manage/styles.css?v=4" />
+    <link rel="stylesheet" href="/vendor/dynaura/styles-no-font.css" />
+    <link rel="stylesheet" href="/notifications.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#lookup">Skip to ICCID lookup</a>
+
+    <header class="site-header" data-header>
+      <div class="container header-inner">
+        <a class="brand" href="/" aria-label="my Pak-Tel home">
+          <img class="brand-image" src="/manage/ptlogo.png" alt="Pak-Tel eSIM" width="710" height="320" />
+          <span class="brand-tag">my Pak-Tel</span>
+        </a>
+        <div class="header-actions">
+          <span class="live-pill"><span></span> Live balance</span>
+          <a class="button button--ghost button--small hide-sm" href="https://pak-tel.com" rel="noopener">pak-tel.com <span aria-hidden="true">↗</span></a>
+          <a class="button button--lime button--small" data-whatsapp href="https://wa.me/923259717066" target="_blank" rel="noopener">WhatsApp support <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-grid-lines" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb--one" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb--two" aria-hidden="true"></div>
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <div class="eyebrow eyebrow--light"><span class="eyebrow-dot"></span> my Pak-Tel / self Top-up service</div>
+            <h1 id="hero-title">Your eSIM.<br /><em>At a glance.</em></h1>
+            <p class="hero-lede">Enter your ICCID to see your remaining data, expiry date and activation status — then top up in a couple of taps.</p>
+          </div>
+
+          <form class="lookup-card" id="lookup" novalidate autocomplete="off">
+            <div class="lookup-head">
+              <span class="eyebrow eyebrow--light"><span class="eyebrow-dot"></span> ICCID lookup</span>
+              <span class="lookup-count" id="iccid-count" aria-hidden="true">0 / 20</span>
+            </div>
+            <label class="lookup-label" for="iccid">Your eSIM ICCID</label>
+            <div class="lookup-row">
+              <input class="lookup-input" id="iccid" name="iccid" type="text" inputmode="numeric" pattern="\d{19,20}" minlength="19" maxlength="20" placeholder="19 or 20 digits" aria-describedby="iccid-hint iccid-error" autocomplete="off" spellcheck="false" required />
+              <button class="button button--lime" id="lookup-btn" type="submit">Check eSIM <span aria-hidden="true">↗</span></button>
+            </div>
+            <p class="lookup-error" id="iccid-error" role="alert" hidden></p>
+            <p class="lookup-hint" id="iccid-hint">Find it in <b>Settings → Mobile Data → your Pak-Tel eSIM</b>, or in the message we sent with your QR code. Digits only.</p>
+          </form>
+        </div>
+      </section>
+
+      <section class="section" id="dashboard" aria-live="polite">
+        <div class="container">
+          <!-- Order / payment status (shown after returning from DPay) -->
+          <div class="order-banner" id="order-banner" hidden>
+            <div class="order-banner-icon" id="order-icon" aria-hidden="true">…</div>
+            <div class="order-banner-body">
+              <span class="eyebrow" id="order-eyebrow"><span class="eyebrow-dot eyebrow-dot--dark"></span> Top-up status</span>
+              <h2 id="order-title"></h2>
+              <p id="order-text"></p>
+              <p class="order-ref">Order <code id="order-ref"></code></p>
+            </div>
+            <div class="order-banner-actions" id="order-actions"></div>
+          </div>
+
+          <!-- Before a lookup -->
+          <div class="empty-state" id="empty-state">
+            <div class="empty-glyph" aria-hidden="true">
+              <svg viewBox="0 0 40 40"><path d="M12 3h16a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H12a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5Z" /><path d="M13 11h14M13 29h14M16 16v8M20 16v8M24 16v8" /></svg>
+            </div>
+            <h2>No eSIM loaded yet</h2>
+            <p>Enter your 19 or 20 digit ICCID above to load your live balance and top-up options. For security, installation codes are sent by email and are not shown from an ICCID lookup.</p>
+          </div>
+
+          <!-- Loading skeleton -->
+          <div class="dash-grid" id="dash-skeleton" hidden aria-hidden="true">
+            <div class="card card--dark skeleton"></div>
+            <div class="card skeleton"></div>
+            <div class="card skeleton"></div>
+          </div>
+
+          <!-- Live dashboard -->
+          <div id="dash" hidden>
+            <div class="dash-head">
+              <div>
+                <span class="eyebrow"><span class="eyebrow-dot eyebrow-dot--dark"></span> eSIM / live details</span>
+                <h2 class="dash-title">ICCID <span class="mono" id="d-iccid"></span></h2>
+              </div>
+              <div class="dash-head-actions">
+                <span class="checked-at" id="d-checked"></span>
+                <button class="button button--dark button--small" id="recheck-btn" type="button"><span class="spin" aria-hidden="true">↻</span> Recheck balance</button>
+              </div>
+            </div>
+
+            <div class="dash-grid">
+              <article class="card card--dark usage-card" aria-labelledby="usage-title">
+                <div class="card-top">
+                  <span class="card-label" id="usage-title">Data balance</span>
+                  <span class="status-chip" id="d-plan-chip"></span>
+                </div>
+                <div class="usage-body">
+                  <div class="ring" role="img" id="d-ring-label">
+                    <svg viewBox="0 0 120 120" aria-hidden="true">
+                      <circle class="ring-track" cx="60" cy="60" r="52" />
+                      <circle class="ring-value" id="d-ring" cx="60" cy="60" r="52" />
+                    </svg>
+                    <div class="ring-center">
+                      <strong id="d-left-num">—</strong>
+                      <span id="d-left-unit"></span>
+                      <small>remaining</small>
+                    </div>
+                  </div>
+                  <dl class="usage-stats">
+                    <div><dt>Used</dt><dd id="d-used">—</dd></div>
+                    <div><dt>Remaining</dt><dd id="d-left">—</dd></div>
+                    <div><dt>Plan total</dt><dd id="d-total">—</dd></div>
+                  </dl>
+                </div>
+                <p class="usage-note" id="d-usage-note" hidden></p>
+              </article>
+
+              <article class="card details-card" aria-labelledby="details-title">
+                <div class="card-top">
+                  <span class="card-label" id="details-title">Plan &amp; status</span>
+                </div>
+                <dl class="detail-list">
+                  <div><dt>Activation status</dt><dd><span class="status-chip status-chip--light" id="d-sim-status"></span></dd></div>
+                  <div><dt>Plan status</dt><dd id="d-plan-state">—</dd></div>
+                  <div><dt>Current plan</dt><dd id="d-plan-name">—</dd></div>
+                  <div><dt>Activated</dt><dd id="d-activated">—</dd></div>
+                  <div><dt>Expires</dt><dd id="d-expires">—</dd></div>
+                  <div><dt>Last network</dt><dd id="d-network">—</dd></div>
+                </dl>
+              </article>
+
+              <article class="card qr-card" aria-labelledby="qr-title">
+                <div class="card-top">
+                  <span class="card-label" id="qr-title">QR &amp; install link</span>
+                </div>
+                <div class="qr-body">
+                  <div class="qr-frame" id="qr-frame">
+                    <canvas id="qr-canvas" width="220" height="220" role="img" aria-label="eSIM installation QR code"></canvas>
+                  </div>
+                  <div class="qr-side">
+                    <p class="qr-help">Scan with the phone you want the eSIM on: <b>Settings → Mobile Data → Add eSIM</b>.</p>
+                    <label class="qr-code-label" for="d-lpa">Activation code</label>
+                    <div class="copy-row">
+                      <input class="copy-input mono" id="d-lpa" type="text" readonly />
+                      <button class="button button--dark button--small" id="copy-lpa" type="button">Copy</button>
+                    </div>
+                    <a class="button button--lime button--full" id="d-ios-link" target="_blank" rel="noopener noreferrer" hidden>Install on iPhone <span aria-hidden="true">↗</span></a>
+                    <button class="text-link text-link--dark" id="copy-ios" type="button" hidden>Copy install link</button>
+                  </div>
+                </div>
+                <p class="qr-missing" id="qr-missing" hidden>For security, QR codes are not displayed using an ICCID alone. Check your delivery email or contact support.</p>
+              </article>
+            </div>
+          </div>
+
+          <!-- Top-up plans -->
+          <div class="block" id="plans">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow"><span class="eyebrow-dot eyebrow-dot--dark"></span> Top-up / live plan sheet</span>
+                <h2>Need more data? <em>Top up.</em></h2>
+              </div>
+              <p class="heading-aside" id="plans-status">Loading plans…</p>
+            </div>
+            <div class="plan-grid" id="plan-grid"></div>
+          </div>
+
+          <!-- Transaction history -->
+          <div class="block" id="history" hidden>
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow"><span class="eyebrow-dot eyebrow-dot--dark"></span> History / this eSIM</span>
+                <h2>Transaction <em>history.</em></h2>
+              </div>
+              <p class="heading-aside" id="history-status"></p>
+            </div>
+            <div class="history-list" id="history-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span class="footer-brand">Pak<span>–</span>Tel <small>my Pak-Tel self-service</small></span>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="https://pak-tel.com" rel="noopener">pak-tel.com</a>
+          <a href="https://pak-tel.com/terms.html" rel="noopener">Terms</a>
+          <a href="https://pak-tel.com/privacy.html" rel="noopener">Privacy</a>
+          <a data-whatsapp href="https://wa.me/923259717066" target="_blank" rel="noopener">WhatsApp</a>
+        </nav>
+        <span class="footer-note">Payments by DPay · bank transfer &amp; wallets</span>
+      </div>
+    </footer>
+
+    <a class="whatsapp-float" data-whatsapp href="https://wa.me/923259717066" target="_blank" rel="noopener" aria-label="Chat with Pak-Tel support on WhatsApp">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4C9.4 4 4 8.9 4 15c0 2.3.8 4.5 2.100 6.200L5 28l6.300-2.300c1.500.6 3.100.9 4.700.9 6.600 0 12-4.900 12-11S22.600 4 16 4Z"/><path class="wa-dots" d="M11 15h.01M16 15h.01M21 15h.01"/></svg>
+      <span>Chat with us</span>
+    </a>
+
+    <!-- Top-up confirmation -->
+    <dialog class="checkout-dialog" id="checkout-dialog" aria-labelledby="checkout-title">
+      <form method="dialog" class="dialog-inner">
+        <span class="eyebrow"><span class="eyebrow-dot eyebrow-dot--dark"></span> Confirm top-up</span>
+        <h2 id="checkout-title">Pay with <em>DPay.</em></h2>
+        <dl class="dialog-list">
+          <div><dt>eSIM (ICCID)</dt><dd class="mono" id="c-iccid"></dd></div>
+          <div><dt>Plan</dt><dd id="c-plan"></dd></div>
+          <div><dt>Plan ID</dt><dd class="mono small" id="c-plan-id"></dd></div>
+          <div class="dialog-total"><dt>Total</dt><dd id="c-price"></dd></div>
+        </dl>
+        <div class="pay-method">
+          <img id="dpay-logo" src="https://dpay.com.pk/brand/dpay-mark.png" alt="DPay" width="28" height="28" />
+          <div><strong>Bank transfer or wallet</strong><small>Pay from any Pakistani bank or wallet app. No card needed.</small></div>
+        </div>
+        <p class="dialog-note">You will be taken to DPay's secure checkout. Your top-up is applied automatically as soon as the payment is verified.</p>
+        <p class="lookup-error" id="c-error" role="alert" hidden></p>
+        <div class="dialog-actions">
+          <button class="button button--ghost-dark" type="submit" value="cancel" id="c-cancel">Cancel</button>
+          <button class="button button--dark" type="button" id="c-pay">Continue to payment <span aria-hidden="true">↗</span></button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="/notifications.js" defer></script>
+    <script src="/manage/vendor/qrcode.js?v=4" defer></script>
+    <script src="/manage/app.js?v=4" defer></script>
+  </body>
+</html>
